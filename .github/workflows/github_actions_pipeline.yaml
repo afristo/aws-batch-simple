@@ -1,0 +1,62 @@
+name: Example Pipeline
+
+# This portion of the YAML file defines when the pipeline will run
+on:
+
+  # Trigger the pipeline when a pull request is opened on the main branch
+  pull_request:
+    branches:
+      - main
+
+# This section defines the individual jobs
+jobs:
+
+  build-cloudformation-stack:
+
+    # Run the environment on the latest Ubuntu image
+    runs-on: ubuntu-latest
+
+    # Set the individual steps that will run for our job
+    steps:
+
+    # Check out the repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    # Install any python packages that we need for the CDK
+    - name: Install CDK Python packages
+      run: |
+        python -m pip install --upgrade pip 
+        pip install -r requirements.txt --target ./
+      working-directory: cdk_app
+
+    # Set the credentials to authenticate us to the AWS API
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-1
+
+    # Update the packages in the Github actions container and install NPM
+    - name: Install NPM
+      run: 'apt update -y && apt install npm -y'
+
+    # Install the CDK using npm
+    - name: Install the CDK
+      run: 'npm install -g aws-cdk'
+
+    # Bootstrap the AWS environment for CDK (this only needs to be done once)
+    - name: Bootstrap the AWS CDK
+      run: cdk bootstrap
+
+    # Deploy our CDK stack
+    - name: CDK Deploy
+      run: cdk deploy --require-approval never
+      working-directory: cdk_app
