@@ -167,7 +167,7 @@ class CloudformationStack(Stack):
             type='container',
             container_properties=batch.CfnJobDefinition.ContainerPropertiesProperty(
                     image=f'{self.account}.dkr.ecr.{self.region}.amazonaws.com/{ecr_repo.repository_name}:hello-world-image',
-                    command=['python', 'hellow_world.py'],
+                    command=['python', 'hello_world.py'],
                     resource_requirements=[
                         batch.CfnJobDefinition.ResourceRequirementProperty(
                             type='VCPU',
